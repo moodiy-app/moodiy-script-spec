@@ -1,11 +1,23 @@
 {
   "id": "tags-and-count",
   "name": "Tags and Count",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Lists the tags of a saved entry, then counts its words.",
   "detail": "detail.html",
   "steps": [
-    { "script": "tags", "abortIfError": true, "pipeToNext": true },
-    { "script": "word-count" }
+    {
+      "script": "tags",
+      "abortIfError": true,
+      "pipeToNext": true,
+      "args": [
+        { "name": "limit", "description": "How many tags to keep (0 keeps all)", "type": "int", "default": 5 }
+      ]
+    },
+    {
+      "script": "word-count",
+      "args": [
+        { "name": "show_files", "description": "List the names of the attachments", "type": "bool", "default": true }
+      ]
+    }
   ]
 }

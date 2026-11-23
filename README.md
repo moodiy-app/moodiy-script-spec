@@ -37,10 +37,10 @@ Examples in this repository:
 | Item | Kind | Notes |
 |---|---|---|
 | `scripts/hello` | JavaScript | The smallest script. No checksum, no detail page. |
-| `scripts/tags` | JavaScript | Answers with an envelope; has a detail page and a checksum. |
-| `scripts/word-count` | JavaScript | Uses the output of the previous step; detail page and checksum. |
+| `scripts/tags` | JavaScript | Answers with an envelope; reads the optional argument `limit`; detail page and checksum. |
+| `scripts/word-count` | JavaScript | Uses the output of the previous step; reads the optional argument `show_files`; detail page and checksum. |
 | `scripts/entry-stats` | Unix (bash) | Has an extra file (`lib/json.sh`), a detail page and checksums. |
-| `flows/tags-and-count` | Flow | Runs `tags`, then `word-count`. |
+| `flows/tags-and-count` | Flow | Runs `tags`, then `word-count`, and declares an argument for each step. |
 
 
 
@@ -57,7 +57,8 @@ Examples in this repository:
 
 1. Make `flows/<id>/` with a `flow.json`: `id`, `name`, `version`, `description` and `steps`.
 2. Each step names the id of a script in this repository's `scripts/` folder. `abortIfError` (default `true`) stops the flow when the step fails, and `pipeToNext` (default `false`) hands the output to the next step.
-3. Run the validator.
+3. Optional: give a step `args`, named settings (`int`, `bool` or `string`, with an optional default) that the script reads from `request.args`. The user sets their values in Moodiy, and they are kept when the flow is updated. A script must cope with an argument that is absent.
+4. Run the validator.
 
 When you change something, raise the `version`. Moodiy offers an update only for a newer version, not for a changed file under the same one.
 

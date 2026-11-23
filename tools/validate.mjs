@@ -19,12 +19,17 @@ const LIMITS = {
     totalBytes: 20 * 1024 * 1024,
     maxFiles: 100,
     maxSteps: 50,
+    maxArgs: 20,
+    argDescriptionLength: 200,
+    argStringLength: 4096,
     maxPathLength: 255,
     maxHomepageLength: 2048
 };
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const VERSION_PATTERN = /^[0-9]+(\.[0-9]+)*(-[0-9A-Za-z.-]+)?$/;
+const ARG_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+const ARG_TYPES = ["int", "bool", "string"];
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
@@ -624,7 +629,7 @@ function checkSteps(path, manifest, scriptIds) {
             return;
         }
 
-        checkUnknownFields(path, step, ["script", "abortIfError", "pipeToNext"]);
+        checkUnknownFields(path, step, ["script", "abortIfError", "pipeToNext", "args"]);
 
         if (typeof step.script !== "string" || !ID_PATTERN.test(step.script)) {
             error(path, `${where}: "script" must be the id of a script`);
@@ -637,7 +642,91 @@ function checkSteps(path, manifest, scriptIds) {
                 error(path, `${where}: "${key}" must be true or false`);
             }
         }
+
+        if (step.args !== undefined) {
+            checkArgs(path, where, step.args);
+        }
     });
+}
+
+// Checks the arguments a step declares (docs/spec.md, "Arguments").
+function checkArgs(path, where, args) {
+    if (!Array.isArray(args)) {
+        error(path, `${where}: "args" must be an array of arguments`);
+        return;
+    }
+
+    if (args.length > LIMITS.maxArgs) {
+        error(path, `${where}: has ${args.length} arguments, at most ${LIMITS.maxArgs} are allowed`);
+    }
+
+    const names = new Set();
+
+    args.forEach((arg, index) => {
+        const label = `${where}, argument ${index + 1}`;
+
+        if (!isObject(arg)) {
+            error(path, `${label} must be an object`);
+            return;
+        }
+
+        checkUnknownFields(path, arg, ["name", "type", "description", "default"]);
+
+        if (typeof arg.name !== "string" || !ARG_NAME_PATTERN.test(arg.name)) {
+            error(path, `${label}: "name" is required and must be an identifier (letters, digits and underscores, not starting with a digit, at most 64 characters)`);
+        } else if (names.has(arg.name)) {
+            error(path, `${label}: the name "${arg.name}" is used twice in this step`);
+        } else {
+            names.add(arg.name);
+        }
+
+        const name = typeof arg.name === "string" ? `${index + 1} ("${arg.name}")` : String(index + 1);
+
+        if (!ARG_TYPES.includes(arg.type)) {
+            error(path, `${where}, argument ${name}: "type" is required and must be one of ${ARG_TYPES.join(", ")}`);
+        }
+
+        if (arg.description !== undefined) {
+            if (typeof arg.description !== "string") {
+                error(path, `${where}, argument ${name}: "description" must be a string`);
+            } else if (length(arg.description) > LIMITS.argDescriptionLength) {
+                error(path, `${where}, argument ${name}: "description" is ${length(arg.description)} characters, at most ${LIMITS.argDescriptionLength} are allowed`);
+            }
+        }
+
+        if (arg.default !== undefined) {
+            checkArgDefault(path, `${where}, argument ${name}`, arg);
+        }
+    });
+}
+
+function checkArgDefault(path, label, arg) {
+    const value = arg.default;
+
+    switch (arg.type) {
+        case "int":
+            if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+                error(path, `${label}: "default" must be a whole number for the type int (${JSON.stringify(value)} is not)`);
+            }
+
+            break;
+        case "bool":
+            if (typeof value !== "boolean") {
+                error(path, `${label}: "default" must be true or false for the type bool (${JSON.stringify(value)} is not)`);
+            }
+
+            break;
+        case "string":
+            if (typeof value !== "string") {
+                error(path, `${label}: "default" must be a string for the type string (${JSON.stringify(value)} is not)`);
+            } else if (length(value) > LIMITS.argStringLength) {
+                error(path, `${label}: "default" is ${length(value)} characters, at most ${LIMITS.argStringLength} are allowed`);
+            }
+
+            break;
+        default:
+            break;
+    }
 }
 
 if (!existsSync(root) || !lstatSync(root).isDirectory()) {

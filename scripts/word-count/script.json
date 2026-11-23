@@ -1,11 +1,11 @@
 {
   "id": "word-count",
   "name": "Word Count",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Counts the words of the entry body, lists its attachments and passes the word count on.",
   "detail": "detail.html",
   "entry": "word-count.js",
   "sha256": {
-    "word-count.js": "332e69ab05f7af5e6f0222dc6fbfa1848b078ce1bee70e094347623ae5a5ec2d"
+    "word-count.js": "eaae1a1e30fb6874bfa9dd5c9392e4e6b5dfad05cd5eb5d62a0a606b3b32c838"
   }
 }

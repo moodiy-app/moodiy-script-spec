@@ -12,7 +12,7 @@ The format is machine-checked by [`tools/validate.mjs`](../tools/validate.mjs) a
 
 A schema cannot see the file system, so the validator also checks the rules that need it (folder names, files, sizes, checksums, flow steps). When the schema and this text disagree, this text wins.
 
-How a script talks to Moodiy once it runs (the request, the result, exit statuses) is not part of this spec. It is the Moodiy Script Protocol, which belongs to the Moodiy app.
+How a script talks to Moodiy once it runs (the request, the result, exit statuses) is not part of this spec. It is the Moodiy Script Protocol, which belongs to the Moodiy app. The one piece that this spec feeds into it is `request.args`, see Arguments.
 
 
 
@@ -180,7 +180,14 @@ A flow lives in `flows/<id>/` and is described by `flows/<id>/flow.json`:
   "description": "Lists the tags of a saved entry, then counts its words.",
   "detail": "detail.html",
   "steps": [
-    { "script": "tags", "abortIfError": true, "pipeToNext": true },
+    {
+      "script": "tags",
+      "abortIfError": true,
+      "pipeToNext": true,
+      "args": [
+        { "name": "limit", "description": "How many tags to keep (0 keeps all)", "type": "int", "default": 5 }
+      ]
+    },
     { "script": "word-count" }
   ]
 }
@@ -198,10 +205,61 @@ A step is an object:
 | `script` | yes | | The id of a script in the `scripts/` folder of **the same repository**. The same script MAY appear in several steps. |
 | `abortIfError` | no | `true` | Stop the flow if this step fails. |
 | `pipeToNext` | no | `false` | Hand the output of this step to the next step. |
+| `args` | no | none | The arguments of the step. See Arguments. At most 20. |
 
 `abortIfError` and `pipeToNext` mirror the options of a step in the Moodiy flow editor.
 
 A flow does not carry any files, and it does not refer to other repositories. Both would make installing it unpredictable.
+
+
+
+### Arguments
+
+A step can declare **arguments**: named settings that Moodiy hands to the script of the step in every run, in `request.args`. The repository declares them; the user sets their values in Moodiy.
+
+```json
+{
+  "script": "tags",
+  "pipeToNext": true,
+  "args": [
+    { "name": "limit", "description": "How many tags to keep", "type": "int", "default": 5 },
+    { "name": "verbose", "type": "bool" },
+    { "name": "label", "type": "string", "default": "hi" }
+  ]
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `name` | yes | An identifier that matches `^[A-Za-z_][A-Za-z0-9_]*$`, at most 64 characters. Unique within the step. The same name MAY be used in other steps. |
+| `type` | yes | One of `int`, `bool` or `string`. |
+| `description` | no | Plain text, at most 200 characters. It tells the user what the setting does. |
+| `default` | no | The value used when the user has not set one. It MUST be a JSON value of the declared type, see below. |
+
+- `int`: a whole JSON number. `1.5` is not an int.
+- `bool`: `true` or `false`.
+- `string`: a string of at most 4096 characters.
+- A step has at most 20 arguments.
+- Other keys in an argument are ignored by clients, and the validator warns about them.
+
+**What the script gets.** The request of the Moodiy Script Protocol has an optional `args` object next to `entry`, `run` and `previous`. It maps each name to its value, written as a JSON number, boolean or string. The protocol stays at version 1. The key is omitted for a step without arguments.
+
+```json
+{ "protocol": 1, "trigger": "save", "entry": { "...": "..." }, "args": { "limit": 5, "label": "hi" } }
+```
+
+The value of an argument is the value the user set, or else the `default`. When there is neither, the argument is simply absent from `args` (here `verbose`), so a script MUST read `args` defensively: `args` itself can be missing, and so can every name in it. A script that is run with no arguments at all SHOULD still do something sensible.
+
+**What is read-only.** The definitions (names, types, descriptions, defaults) come from the repository. Moodiy shows them but does not let the user change them. Only the values are the user's.
+
+**Updating.** When the flow is updated to a newer version, the values the user set are kept, matched by argument name and type:
+
+- A step of the new version is matched with the step of the old version that uses the same script and has most of the same arguments. A script may appear in several steps, so the arguments are what tell these steps apart.
+- Within a matched step, a value stays when the argument has the same name and the same type.
+- A value is dropped when its argument was removed or its type changed. The default applies again.
+- The values of the user do not make a flow "modified" (see Installing and Updating).
+
+Because the definitions are part of the flow, adding, removing or changing an argument is a change of the flow: raise the `version` of the flow.
 
 
 
@@ -244,7 +302,7 @@ These rules describe what a conforming client does.
 
 **Offering upgrades.** What decides whether an upgrade is offered is the `version` (see Versions): an installed item is upgradable when the catalog has a newer version of the same repository and `id`. A changed file under the **same version is not an update**. Change the version whenever a file, a step or an option changes in a way that users should get.
 
-**Local changes.** Because the client remembers the commit and the checksums of what it installed, it can mark an item that the user has changed locally, and it will not overwrite such an item without asking. The user may override it on request.
+**Local changes.** Because the client remembers the commit and the checksums of what it installed, it can mark an item that the user has changed locally, and it will not overwrite such an item without asking. The user may override it on request. The values that the user gives to the arguments of a flow are settings, not changes: they do not mark the flow as modified, and an upgrade keeps them as described in Arguments.
 
 **Other catalogs.** Users can add other repositories that use this layout. Items are identified by the repository address together with the `id`, so two repositories can use the same id without clashing.
 
@@ -264,6 +322,7 @@ The validator checks that:
 - every listed file exists, is a regular file and is within the size limits, a Unix entry starts with a shebang, and the checksums match;
 - detail files exist, are within the size limit, and follow the rich-text rules;
 - every flow step names a script that exists in the same repository;
+- the arguments of a step follow the rules above: valid and unique names, a known type, a description within the limit, a default of the declared type, and at most 20 arguments;
 - there are no symbolic links.
 
-It prints one line for each problem and exits with `1` if there is an error. Warnings (unknown fields, a numeric version) do not change the exit status.
+It prints one line for each problem and exits with `1` if there is an error. Warnings (unknown fields, including in a step or an argument, and a numeric version) do not change the exit status.

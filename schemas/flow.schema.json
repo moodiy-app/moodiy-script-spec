@@ -71,8 +71,52 @@
           "description": "Hand the output of this step to the next step. Defaults to false.",
           "type": "boolean",
           "default": false
+        },
+        "args": {
+          "description": "The arguments of the step: named settings that the script gets in request.args. The user sets their values in Moodiy. At most 20, with names that are unique within the step.",
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/arg" }
         }
       }
+    },
+    "arg": {
+      "description": "One argument of a step. A default, when given, must be of the declared type. A schema cannot say that names are unique within the step: tools/validate.mjs checks that.",
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "description": "An identifier, at most 64 characters. Unique within the step.",
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+        },
+        "type": {
+          "description": "The type of the value.",
+          "enum": ["int", "bool", "string"]
+        },
+        "description": {
+          "description": "Plain text, at most 200 characters.",
+          "type": "string",
+          "maxLength": 200
+        },
+        "default": {
+          "description": "The value used when the user has not set one. An integer for int, true or false for bool, a string of at most 4096 characters for string. Without a default and without a value, the argument is absent from request.args."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "int" } }, "required": ["type"] },
+          "then": { "properties": { "default": { "type": "integer" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "bool" } }, "required": ["type"] },
+          "then": { "properties": { "default": { "type": "boolean" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "string" } }, "required": ["type"] },
+          "then": { "properties": { "default": { "type": "string", "maxLength": 4096 } } }
+        }
+      ]
     }
   }
 }

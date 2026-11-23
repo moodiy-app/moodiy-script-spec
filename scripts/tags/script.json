@@ -1,11 +1,11 @@
 {
   "id": "tags",
   "name": "Tags",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Lists the tags of the entry and hands them to the next step as hashtags.",
   "detail": "detail.html",
   "entry": "tags.js",
   "sha256": {
-    "tags.js": "9a9aa2161e1295c5969520dd960d58739075259a8f97ff0afecb3d050668d147"
+    "tags.js": "3377a3cf742e6aa168bcc73c6fae9f42d40e1b3bc079f9a30f4de4124703e111"
   }
 }
