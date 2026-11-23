@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Moodiy script spec: flow.json",
+  "description": "The manifest of one script flow, flows/<id>/flow.json. See docs/spec.md. A schema cannot check the rules that need the file system: the folder name must equal id, every step must name a script of the same repository, and the detail file must exist and be small enough. Run tools/validate.mjs for those. Fields this schema does not know are ignored by clients.",
+  "type": "object",
+  "required": ["id", "name", "version", "description", "steps"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "name": {
+      "description": "The name shown to people, one line.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^\\u0000-\\u001f]*[^\\s\\u0000-\\u001f][^\\u0000-\\u001f]*$"
+    },
+    "version": { "$ref": "#/$defs/version" },
+    "description": {
+      "description": "Plain text, at most 500 characters.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "detail": {
+      "description": "A path to a self-contained html file in the flow folder, at most 200 KB. It is shown to people and never installed.",
+      "allOf": [
+        { "$ref": "#/$defs/path" },
+        { "pattern": "\\.html?$" }
+      ]
+    },
+    "steps": {
+      "description": "The steps, in the order they run.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "description": "Lowercase letters, digits, dot, underscore and hyphen; starts with a letter or a digit; at most 64 characters. The folder name is the same.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "version": {
+      "description": "A string such as 1.0, 1.2.3 or 1.0-beta. A number is accepted too, but a number cannot keep a trailing zero (1.10 is read as 1.1), so write a string.",
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*(-[0-9A-Za-z.-]+)?$", "maxLength": 64 },
+        { "type": "number", "minimum": 0 }
+      ]
+    },
+    "path": {
+      "description": "A relative path with / separators: no leading or trailing /, no empty, . or .. segment, no backslash, no control character.",
+      "type": "string",
+      "maxLength": 255,
+      "pattern": "^(?!\\.{1,2}(?:/|$))(?!.*/\\.{1,2}(?:/|$))(?!.*//)(?!/)[^\\\\\\u0000-\\u001f]+(?<!/)$"
+    },
+    "step": {
+      "type": "object",
+      "required": ["script"],
+      "properties": {
+        "script": {
+          "description": "The id of a script in the scripts folder of the same repository. The same script may be used by several steps.",
+          "$ref": "#/$defs/id"
+        },
+        "abortIfError": {
+          "description": "Stop the flow if this step fails. Defaults to true.",
+          "type": "boolean",
+          "default": true
+        },
+        "pipeToNext": {
+          "description": "Hand the output of this step to the next step. Defaults to false.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}

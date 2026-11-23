@@ -1,0 +1,11 @@
+{
+  "id": "tags-and-count",
+  "name": "Tags and Count",
+  "version": "1.0",
+  "description": "Lists the tags of a saved entry, then counts its words.",
+  "detail": "detail.html",
+  "steps": [
+    { "script": "tags", "abortIfError": true, "pipeToNext": true },
+    { "script": "word-count" }
+  ]
+}

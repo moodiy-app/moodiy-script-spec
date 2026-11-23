@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Entry Stats</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 0; }
+  h2 { font-size: 16px; margin: 16px 0 6px; }
+  p, ul { margin: 6px 0; }
+  code { font-family: ui-monospace, Menlo, monospace; background: rgba(127, 127, 127, .18); padding: 1px 4px; border-radius: 4px; }
+  .warn { border-left: 3px solid #d8892f; padding: 4px 10px; background: rgba(216, 137, 47, .12); }
+</style>
+</head>
+<body>
+<h2>What it does</h2>
+<p>Counts the words and the characters of the entry body, and hands the summary (for example <code>42 words, 230 characters</code>) to the next step.</p>
+
+<h2>Files</h2>
+<ul>
+  <li><code>entry-stats.sh</code>: the script.</li>
+  <li><code>lib/json.sh</code>: small helpers that the script loads from its own folder.</li>
+</ul>
+
+<p class="warn"><b>Runs outside Moodiy's sandbox.</b> It is a Unix script, so it can do anything your account can do. This one only reads the request and prints a result. Read the files before you install it.</p>
+</body>
+</html>

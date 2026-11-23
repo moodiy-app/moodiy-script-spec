@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Moodiy script spec: script.json",
+  "description": "The manifest of one script, scripts/<id>/script.json. See docs/spec.md. A schema cannot check the rules that need the file system or other fields: the folder name must equal id, files must not repeat the entry or each other when compared case-insensitively, sha256 may only name the entry or a listed file, sizes and checksums must match, and a Unix entry must start with a shebang. Run tools/validate.mjs for those. Fields this schema does not know are ignored by clients.",
+  "type": "object",
+  "required": ["id", "name", "version", "description", "entry"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "name": {
+      "description": "The name shown to people, one line.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^\\u0000-\\u001f]*[^\\s\\u0000-\\u001f][^\\u0000-\\u001f]*$"
+    },
+    "version": { "$ref": "#/$defs/version" },
+    "description": {
+      "description": "Plain text, at most 500 characters.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "detail": {
+      "description": "A path to a self-contained html file in the script folder, at most 200 KB. It is shown to people and never installed.",
+      "allOf": [
+        { "$ref": "#/$defs/path" },
+        { "pattern": "\\.html?$" }
+      ]
+    },
+    "entry": {
+      "description": "The file that is run. A name that ends in .js is JavaScript run inside Moodiy; anything else is a Unix script that must start with a shebang.",
+      "$ref": "#/$defs/path"
+    },
+    "files": {
+      "description": "Extra files to install next to the entry. The entry is implied and must not be repeated. With the entry, at most 100 files.",
+      "type": "array",
+      "maxItems": 99,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/path" }
+    },
+    "sha256": {
+      "description": "Checksums of the entry and of listed files: the path, then 64 lowercase hex digits. A file without a checksum is shown to the user as unverified.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/path" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "homepage": {
+      "description": "An https address.",
+      "type": "string",
+      "maxLength": 2048,
+      "pattern": "^https://[^\\s]+$"
+    }
+  },
+  "$defs": {
+    "id": {
+      "description": "Lowercase letters, digits, dot, underscore and hyphen; starts with a letter or a digit; at most 64 characters. The folder name is the same.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "version": {
+      "description": "A string such as 1.0, 1.2.3 or 1.0-beta. A number is accepted too, but a number cannot keep a trailing zero (1.10 is read as 1.1), so write a string.",
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*(-[0-9A-Za-z.-]+)?$", "maxLength": 64 },
+        { "type": "number", "minimum": 0 }
+      ]
+    },
+    "path": {
+      "description": "A relative path with / separators: no leading or trailing /, no empty, . or .. segment, no backslash, no control character.",
+      "type": "string",
+      "maxLength": 255,
+      "pattern": "^(?!\\.{1,2}(?:/|$))(?!.*/\\.{1,2}(?:/|$))(?!.*//)(?!/)[^\\\\\\u0000-\\u001f]+(?<!/)$"
+    }
+  }
+}

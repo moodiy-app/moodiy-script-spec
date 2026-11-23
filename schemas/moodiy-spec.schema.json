@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Moodiy script spec: moodiy-spec.json",
+  "description": "The root file of a Moodiy script catalog repository. See docs/spec.md. Fields this schema does not know are ignored by clients.",
+  "type": "object",
+  "required": ["spec", "name", "description"],
+  "properties": {
+    "spec": {
+      "description": "The version of the spec. Always 1 for now.",
+      "const": 1
+    },
+    "name": {
+      "description": "The name of the catalog, one line.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^\\u0000-\\u001f]*[^\\s\\u0000-\\u001f][^\\u0000-\\u001f]*$"
+    },
+    "description": {
+      "description": "Plain text, at most 500 characters.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "homepage": {
+      "description": "An https address.",
+      "type": "string",
+      "maxLength": 2048,
+      "pattern": "^https://[^\\s]+$"
+    }
+  }
+}

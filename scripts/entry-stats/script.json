@@ -1,0 +1,13 @@
+{
+  "id": "entry-stats",
+  "name": "Entry Stats",
+  "version": "1.0",
+  "description": "A Unix script: counts the words and characters of the entry body and passes the summary on.",
+  "detail": "detail.html",
+  "entry": "entry-stats.sh",
+  "files": ["lib/json.sh"],
+  "sha256": {
+    "entry-stats.sh": "07ce26d542298fe954cc4d3ff202f3edde8a226e017195a5c6ac3fb6a6d26a7e",
+    "lib/json.sh": "6e8a4488d86e793ad9efbebf08f9cb90b4178bb64a8017a24bbc600c50b533c4"
+  }
+}

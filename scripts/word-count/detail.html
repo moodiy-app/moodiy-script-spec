@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Word Count</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 0; }
+  h2 { font-size: 16px; margin: 16px 0 6px; }
+  p, ul { margin: 6px 0; }
+  code { font-family: ui-monospace, Menlo, monospace; background: rgba(127, 127, 127, .18); padding: 1px 4px; border-radius: 4px; }
+  .note { border-left: 3px solid #2f7fd8; padding: 4px 10px; background: rgba(47, 127, 216, .1); }
+</style>
+</head>
+<body>
+<h2>What it does</h2>
+<p>Counts the words in the body of the entry and tells you how many files are attached.</p>
+
+<h2>Result</h2>
+<ul>
+  <li><b>Message:</b> for example <code>42 words, 2 attachment(s): a.png, b.png</code>.</li>
+  <li><b>Output:</b> the number of words, as text, for the next step.</li>
+  <li>An entry without a body is <i>skipped</i>.</li>
+</ul>
+
+<p class="note">A JavaScript script. It runs inside Moodiy and cannot reach the network, your files or other programs.</p>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "id": "hello",
+  "name": "Hello",
+  "version": "1.0",
+  "description": "The smallest JavaScript script: answers with a greeting that names the entry.",
+  "entry": "hello.js"
+}
