@@ -92,7 +92,7 @@
         },
         "type": {
           "description": "The type of the value.",
-          "enum": ["int", "bool", "string"]
+          "enum": ["int", "double", "bool", "string"]
         },
         "description": {
           "description": "Plain text, at most 200 characters.",
@@ -100,13 +100,17 @@
           "maxLength": 200
         },
         "default": {
-          "description": "The value used when the user has not set one. An integer for int, true or false for bool, a string of at most 4096 characters for string. Without a default and without a value, the argument is absent from request.args."
+          "description": "The value used when the user has not set one. An integer for int (1.0 counts), any finite number for double, true or false for bool, a string of at most 4096 characters for string. Without a default and without a value, the argument is absent from request.args."
         }
       },
       "allOf": [
         {
           "if": { "properties": { "type": { "const": "int" } }, "required": ["type"] },
           "then": { "properties": { "default": { "type": "integer" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "double" } }, "required": ["type"] },
+          "then": { "properties": { "default": { "type": "number" } } }
         },
         {
           "if": { "properties": { "type": { "const": "bool" } }, "required": ["type"] },

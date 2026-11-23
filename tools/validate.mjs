@@ -29,7 +29,7 @@ const LIMITS = {
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const VERSION_PATTERN = /^[0-9]+(\.[0-9]+)*(-[0-9A-Za-z.-]+)?$/;
 const ARG_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
-const ARG_TYPES = ["int", "bool", "string"];
+const ARG_TYPES = ["int", "double", "bool", "string"];
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
@@ -683,7 +683,7 @@ function checkArgs(path, where, args) {
         const name = typeof arg.name === "string" ? `${index + 1} ("${arg.name}")` : String(index + 1);
 
         if (!ARG_TYPES.includes(arg.type)) {
-            error(path, `${where}, argument ${name}: "type" is required and must be one of ${ARG_TYPES.join(", ")}`);
+            error(path, `${where}, argument ${name}: "type" is required and must be int, double, bool or string`);
         }
 
         if (arg.description !== undefined) {
@@ -707,6 +707,12 @@ function checkArgDefault(path, label, arg) {
         case "int":
             if (typeof value !== "number" || !Number.isSafeInteger(value)) {
                 error(path, `${label}: "default" must be a whole number for the type int (${JSON.stringify(value)} is not)`);
+            }
+
+            break;
+        case "double":
+            if (typeof value !== "number" || !Number.isFinite(value)) {
+                error(path, `${label}: "default" must be a number for the type double (${JSON.stringify(value)} is not)`);
             }
 
             break;

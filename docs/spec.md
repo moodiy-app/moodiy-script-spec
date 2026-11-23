@@ -223,6 +223,7 @@ A step can declare **arguments**: named settings that Moodiy hands to the script
   "pipeToNext": true,
   "args": [
     { "name": "limit", "description": "How many tags to keep", "type": "int", "default": 5 },
+    { "name": "ratio", "type": "double", "default": 0.5 },
     { "name": "verbose", "type": "bool" },
     { "name": "label", "type": "string", "default": "hi" }
   ]
@@ -232,11 +233,12 @@ A step can declare **arguments**: named settings that Moodiy hands to the script
 | Field | Required | Meaning |
 |---|---|---|
 | `name` | yes | An identifier that matches `^[A-Za-z_][A-Za-z0-9_]*$`, at most 64 characters. Unique within the step. The same name MAY be used in other steps. |
-| `type` | yes | One of `int`, `bool` or `string`. |
+| `type` | yes | One of `int`, `double`, `bool` or `string`. |
 | `description` | no | Plain text, at most 200 characters. It tells the user what the setting does. |
 | `default` | no | The value used when the user has not set one. It MUST be a JSON value of the declared type, see below. |
 
-- `int`: a whole JSON number. `1.5` is not an int.
+- `int`: a whole JSON number. `1.5` is not an int; `1.0` is accepted and means `1`.
+- `double`: any finite JSON number, with or without a fraction. A whole number such as `2` is fine and means `2.0`. A string is not a number. The script gets the value as a JSON number.
 - `bool`: `true` or `false`.
 - `string`: a string of at most 4096 characters.
 - A step has at most 20 arguments.
@@ -245,7 +247,7 @@ A step can declare **arguments**: named settings that Moodiy hands to the script
 **What the script gets.** The request of the Moodiy Script Protocol has an optional `args` object next to `entry`, `run` and `previous`. It maps each name to its value, written as a JSON number, boolean or string. The protocol stays at version 1. The key is omitted for a step without arguments.
 
 ```json
-{ "protocol": 1, "trigger": "save", "entry": { "...": "..." }, "args": { "limit": 5, "label": "hi" } }
+{ "protocol": 1, "trigger": "save", "entry": { "...": "..." }, "args": { "limit": 5, "ratio": 0.5, "label": "hi" } }
 ```
 
 The value of an argument is the value the user set, or else the `default`. When there is neither, the argument is simply absent from `args` (here `verbose`), so a script MUST read `args` defensively: `args` itself can be missing, and so can every name in it. A script that is run with no arguments at all SHOULD still do something sensible.
@@ -322,7 +324,7 @@ The validator checks that:
 - every listed file exists, is a regular file and is within the size limits, a Unix entry starts with a shebang, and the checksums match;
 - detail files exist, are within the size limit, and follow the rich-text rules;
 - every flow step names a script that exists in the same repository;
-- the arguments of a step follow the rules above: valid and unique names, a known type, a description within the limit, a default of the declared type, and at most 20 arguments;
+- the arguments of a step follow the rules above: valid and unique names, a known type (`int`, `double`, `bool` or `string`), a description within the limit, a default of the declared type, and at most 20 arguments;
 - there are no symbolic links.
 
 It prints one line for each problem and exits with `1` if there is an error. Warnings (unknown fields, including in a step or an argument, and a numeric version) do not change the exit status.
